@@ -1,6 +1,6 @@
 # Infuse
 
-`Infuse` is a lightweigth and simple `Dependency Injection` framework. 
+`Infuse` is a ligthweigth and simple `Dependency Injection` framework. 
 It's actually an implementation of the `Service Locator` pattern, based on a simple concept of registering and consuming dependencies/services to avoid a strong coupling between the components.
 
 

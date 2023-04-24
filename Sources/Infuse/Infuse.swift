@@ -7,42 +7,26 @@ import Foundation
 ///
 public final class Infuse {
 
-	private class Factory {
-		private let factory: () throws -> Any
-
-		init(_ factory: @escaping () throws -> Any) {
-			self.factory = factory
-		}
-
-		func callAsFunction<T>() throws -> T {
-			return try resolve()
-		}
-
-		func resolve<T>() throws -> T {
-			guard let instance = try factory() as? T else {
-				throw InfuseError.dependencyNotFound(forType: String(describing: T.self))
-			}
-			return instance
-		}
-	}
-
+	// TODO: Check this `lock` approach
 	private let lock = NSRecursiveLock()
 
-	private var factories: [String: Factory] = [:]
+	private var scopes: [String: ScopeProtocol] = [:]
 
 	// we need this to make its initializer accessible outside
 	public init() { }
 
 	@discardableResult
-	public func register<T>(_ type: T.Type = T.self, _ factory: @escaping () throws -> T) throws -> Infuse {
+	public func register<T>(scope: Scope = Scope.default, _ type: T.Type = T.self, _ factory: @escaping () throws -> T) throws -> Infuse {
 		lock.lock()
 		defer { lock.unlock()}
 
-		let key = String(describing: type)
-		guard factories.contains(where: { $0.key == key }) == false else {
-			throw InfuseError.duplicatedDependency(forType: key)
+		if let scope = scopes[scope.id] {
+			try scope.register(type, factory)
+		} else {
+			let newScope = Scope.newInstance(scope)
+			try newScope.register(type, factory)
+			scopes[scope.id] = newScope
 		}
-		factories[key] = Factory(factory)
 
 		return self
 	}
@@ -51,22 +35,32 @@ public final class Infuse {
 		lock.lock()
 		defer { lock.unlock()}
 
-		let key = String(describing: type)
-		guard let factory = factories[key] else {
+		var dependency: T?
+		for scope in scopes.values {
+			dependency = try? scope.resolve(type)
+			// if found a dependency, exit the loop
+			if dependency != nil { break }
+		}
+		guard let dependency = dependency else {
+			let key = String(describing: type)
 			throw InfuseError.dependencyNotFound(forType: key)
 		}
-		return try factory() as T
+		return dependency
 	}
 
-	 func reset() {
+	func reset() {
 		lock.lock()
 		defer { lock.unlock()}
 
-		factories.removeAll()
+		for scope in scopes.values {
+			scope.reset()
+		}
 	}
 }
 
 /// These are for testing purpose
 internal extension Infuse {
-	var registeredCount: Int { factories.count }
+//	var registeredCount: Int { factories.count }
+	// TODO: Check this...
+	var registeredCount: Int { -1 }
 }
