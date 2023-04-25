@@ -6,8 +6,10 @@ import PackageDescription
 let package = Package(
 	name: "Infuse",
 	platforms: [
-		.macOS(.v10_15),
-		.iOS(.v14)
+		.iOS(.v11),
+		.macOS(.v12),
+		.tvOS(.v13),
+		.watchOS(.v6)
 	],
 	products: [
 		// Products define the executables and libraries a package produces, and make them visible to other packages.

@@ -35,7 +35,6 @@ internal extension ScopeProtocol {
 	}
 }
 
-
 // TODO: Doc
 internal final class DefaultScope: ScopeProtocol {
 	private var factories: [String: Factory] = [:]

@@ -16,7 +16,12 @@ public final class Infuse {
 	public init() { }
 
 	@discardableResult
-	public func register<T>(scope: Scope = Scope.default, _ type: T.Type = T.self, _ factory: @escaping () throws -> T) throws -> Infuse {
+	public func register<T>(
+		scope: Scope = Scope.default,
+		_ type: T.Type = T.self,
+		_ factory: @escaping () throws -> T
+	) throws -> Infuse {
+
 		lock.lock()
 		defer { lock.unlock()}
 
